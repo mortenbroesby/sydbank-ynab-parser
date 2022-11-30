@@ -1,0 +1,18 @@
+{
+  "name": "sydbank-ynab-parser",
+  "version": "1.0.2",
+  "description": "Sydbank YNAB CSV parser app",
+  "license": "MIT",
+  "author": {
+    "name": "Morten Broesby-Olsen",
+    "email": "levorto@gmail.com",
+    "url": "https://github.com/mortenbroesby/sydbank-ynab-parser"
+  },
+  "main": "./dist/main/main.js",
+  "scripts": {
+    "rebuild": "node -r ts-node/register ../../.erb/scripts/electron-rebuild.js",
+    "postinstall": "npm run rebuild && npm run link-modules",
+    "link-modules": "node -r ts-node/register ../../.erb/scripts/link-modules.ts"
+  },
+  "dependencies": {}
+}
