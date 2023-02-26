@@ -164,7 +164,7 @@ async function parseCSVFile(filePath: string) {
        */
       const entryPayee = entryObject.Text;
       if (entryPayee) {
-        const cleanedPayee = cleanupPayee(entryPayee);
+        const cleanedPayee = getCleanedPayee(entryPayee);
         const mappedPayee = getMappedPayee(cleanedPayee);
 
         parsedEntry.Payee = mappedPayee;
@@ -247,14 +247,24 @@ function isNegative(input: number) {
   return input < 0;
 }
 
-function cleanupPayee(input: string) {
+function getCleanedPayee(input: string) {
   const cleaned = input.replace(/^\s+|\s+$|\s+(?=\s)/g, "");
-  const withoutIdentifiers = cleaned
+
+  const removeIdentifiers = cleaned
     .replace("MCDK ", "")
     .replace("DK ", "")
-    .replace("NETS*", "");
+    .replace("NETS*", "")
+    .replace("PAY*", "")
+    .replace("Klarna*", "");
 
-  return withoutIdentifiers;
+  const replaceWithQuote = removeIdentifiers.replace("À", "'");
+  const removeExcessQuotes = replaceWithQuote
+    .replace(/"{2}/g, '"')
+    .replace(/^"/, "")
+    .replace(/"$/, "")
+    .replace(/"/g, "'");
+
+  return removeExcessQuotes;
 }
 
 /**
@@ -329,10 +339,13 @@ function getMappedPayee(inputPayee: string) {
     ["Fakta", "Fakta"],
     ["PLEO", "PLEO"],
     ["1 stk. hævning i andre pengeinst", "Bank Expenses"],
+    ["Rente", "Bank Expenses"],
     ["CIRCLE K", "Circle K"],
     ["BILKA", "Bilka"],
     ["SAXO", "Saxo"],
     ["Skatteforvaltningen", "Skatteforvaltningen"],
+    ["VESTERBRO KONTORFORSYN", "Vesterbro Kontorforsyning"],
+    ["Amazon Video", "Amazon Video"],
   ]);
 
   // Check for a match without spaces
