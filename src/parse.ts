@@ -95,86 +95,85 @@ const SYDBANK_FIELDS = [
   "Comment",
 ];
 
+function parseCSV(jsonObject) {
+  const output = [];
+
+  type SydbankObject = {
+    [key in SydbankFields]: any;
+  };
+
+  type YnabObject = {
+    [key in YnabFields]: string;
+  };
+
+  jsonObject.forEach((entryObject: SydbankObject) => {
+    const parsedEntry: YnabObject = {
+      Date: "",
+      Payee: "",
+      Category: "",
+      Memo: "",
+      Outflow: "",
+      Inflow: "",
+    };
+
+    /**
+     * Parse date
+     */
+    const entryDate = entryObject.Date;
+    if (entryDate) {
+      parsedEntry.Date = entryDate.replaceAll(".", "/");
+    }
+
+    /**
+     * Parse inflow/outflow
+     */
+    const entryAmount = entryObject.Amount;
+    if (entryAmount) {
+      const parsedAmount = Number(entryAmount.replace(/[^0-9\-]+/g, "")) / 100;
+
+      if (isNegative(parsedAmount)) {
+        parsedEntry.Outflow = Math.abs(parsedAmount).toFixed(2);
+        parsedEntry.Memo = "Outflow";
+      } else {
+        parsedEntry.Inflow = Math.abs(parsedAmount).toFixed(2);
+        parsedEntry.Memo = "Inflow";
+      }
+    }
+
+    /**
+     * Parse category
+     */
+    const entryMainCategory = entryObject.Maincategory;
+    const entryCategory = entryObject.Category;
+    if (entryMainCategory && entryCategory) {
+      const { mappedCategory, mappedMemo } = getMappedCategory({
+        mainCategory: entryMainCategory,
+        category: entryCategory,
+      });
+
+      parsedEntry.Category = mappedCategory;
+      parsedEntry.Memo = mappedMemo;
+    }
+
+    /**
+     * Parse payee
+     */
+    const entryPayee = entryObject.Text;
+    if (entryPayee) {
+      const cleanedPayee = getCleanedPayee(entryPayee);
+      const mappedPayee = getMappedPayee(cleanedPayee);
+
+      parsedEntry.Payee = mappedPayee;
+    }
+
+    output.push(parsedEntry);
+  });
+
+  return output;
+}
+
 async function parseCSVFile(filePath: string) {
   const fullPath = `${SANITIZED_CSV_FILEPATH}${filePath}`;
-
-  function parseCSV(jsonObject) {
-    const output = [];
-
-    type SydbankObject = {
-      [key in SydbankFields]: any;
-    };
-
-    type YnabObject = {
-      [key in YnabFields]: string;
-    };
-
-    jsonObject.forEach((entryObject: SydbankObject) => {
-      const parsedEntry: YnabObject = {
-        Date: "",
-        Payee: "",
-        Category: "",
-        Memo: "",
-        Outflow: "",
-        Inflow: "",
-      };
-
-      /**
-       * Parse date
-       */
-      const entryDate = entryObject.Date;
-      if (entryDate) {
-        parsedEntry.Date = entryDate.replaceAll(".", "/");
-      }
-
-      // /**
-      //  * Parse inflow/outflow
-      //  */
-      const entryAmount = entryObject.Amount;
-      if (entryAmount) {
-        const parsedAmount =
-          Number(entryAmount.replace(/[^0-9\-]+/g, "")) / 100;
-
-        if (isNegative(parsedAmount)) {
-          parsedEntry.Outflow = Math.abs(parsedAmount).toFixed(2);
-          parsedEntry.Memo = "Outflow";
-        } else {
-          parsedEntry.Inflow = Math.abs(parsedAmount).toFixed(2);
-          parsedEntry.Memo = "Inflow";
-        }
-      }
-
-      /**
-       * Parse category
-       */
-      const entryMainCategory = entryObject.Maincategory;
-      const entryCategory = entryObject.Category;
-      if (entryCategory) {
-        const { mappedCategory, mappedMemo } = getMappedCategory({
-          mainCategory: entryMainCategory,
-          category: entryCategory,
-        });
-
-        parsedEntry.Category = mappedCategory;
-        parsedEntry.Memo = mappedMemo;
-      }
-
-      /**
-       * Parse payee
-       */
-      const entryPayee = entryObject.Text;
-      if (entryPayee) {
-        const cleanedPayee = getCleanedPayee(entryPayee);
-        const mappedPayee = getMappedPayee(cleanedPayee);
-
-        parsedEntry.Payee = mappedPayee;
-      }
-
-      output.push(parsedEntry);
-    });
-
-    return output;
-  }
 
   const converter = csv({
     delimiter: ";",
@@ -230,7 +229,9 @@ async function mainLoop() {
     basePath: SANITIZED_CSV_FILEPATH,
   });
 
-  const parseJobs = sanitisedCSVFiles.map((filePath) => parseCSVFile(filePath));
+  const parseJobs = sanitisedCSVFiles.map(
+    async (filePath) => await parseCSVFile(filePath)
+  );
 
   await Promise.all(parseJobs);
 }
