@@ -8,6 +8,7 @@ const readDir = require("readdir");
 
 import { format } from "date-fns";
 import csv from "csvtojson";
+import { createObjectCsvWriter } from "csv-writer";
 
 const INPUT_CSV_FILEPATH = "./csv/input/";
 const SANITIZED_CSV_FILEPATH = "./csv/sanitized/";
@@ -40,13 +41,7 @@ async function sanitizeCSVFile(filePath: string) {
     "utf8"
   );
 
-  const sanitisedFileContent = fileContent.replaceAll(/�/g, "oe");
-
-  await fs.writeFile(
-    `${INPUT_CSV_FILEPATH}${filePath}`,
-    sanitisedFileContent,
-    "utf8"
-  );
+  await fs.writeFile(`${INPUT_CSV_FILEPATH}${filePath}`, fileContent, "utf8");
 
   // Only format non-formatted files
   if (!filePath.includes("sydbank_csv_")) {
@@ -62,7 +57,7 @@ async function sanitizeCSVFile(filePath: string) {
   );
 }
 
-interface ParsedEntry {
+interface YNABEntry {
   Date: string;
   Payee: string;
   Category: string;
@@ -71,7 +66,34 @@ interface ParsedEntry {
   Inflow: string;
 }
 
+type YnabFields = "Date" | "Payee" | "Category" | "Memo" | "Outflow" | "Inflow";
+
 const YNAB_FIELDS = ["Date", "Payee", "Category", "Memo", "Outflow", "Inflow"];
+
+type SydbankFields =
+  | "Date"
+  | "Text"
+  | "Amount"
+  | "Balance"
+  | "Reconciled"
+  | "Kontonummer"
+  | "Accountname"
+  | "Maincategory"
+  | "Category"
+  | "Comment";
+
+const SYDBANK_FIELDS = [
+  "Date",
+  "Text",
+  "Amount",
+  "Balance",
+  "Reconciled",
+  "Kontonummer",
+  "Accountname",
+  "Maincategory",
+  "Category",
+  "Comment",
+];
 
 async function parseCSVFile(filePath: string) {
   const fullPath = `${SANITIZED_CSV_FILEPATH}${filePath}`;
@@ -79,8 +101,16 @@ async function parseCSVFile(filePath: string) {
   function parseCSV(jsonObject) {
     const output = [];
 
-    jsonObject.forEach((entryObject) => {
-      const parsedEntry: ParsedEntry = {
+    type SydbankObject = {
+      [key in SydbankFields]: any;
+    };
+
+    type YnabObject = {
+      [key in YnabFields]: string;
+    };
+
+    jsonObject.forEach((entryObject: SydbankObject) => {
+      const parsedEntry: YnabObject = {
         Date: "",
         Payee: "",
         Category: "",
@@ -92,38 +122,40 @@ async function parseCSVFile(filePath: string) {
       /**
        * Parse date
        */
-      const entryDate = entryObject["Dato"];
+      const entryDate = entryObject.Date;
       if (entryDate) {
         parsedEntry.Date = entryDate.replaceAll(".", "/");
       }
 
-      /**
-       * Parse inflow/outflow
-       */
-      const entryAmount = entryObject["Bel�b"] ?? entryObject["Beloeb"];
+      // /**
+      //  * Parse inflow/outflow
+      //  */
+      const entryAmount = entryObject.Amount;
       if (entryAmount) {
         const parsedAmount =
           Number(entryAmount.replace(/[^0-9\-]+/g, "")) / 100;
 
         if (isNegative(parsedAmount)) {
           parsedEntry.Outflow = Math.abs(parsedAmount).toFixed(2);
+          parsedEntry.Memo = "Outflow";
         } else {
           parsedEntry.Inflow = Math.abs(parsedAmount).toFixed(2);
+          parsedEntry.Memo = "Inflow";
         }
       }
 
       /**
        * Parse category
        */
-      const entryCategory = entryObject["Kategori"];
+      const entryCategory = entryObject.Category;
       if (entryCategory) {
         parsedEntry.Category = getMappedCategory(entryCategory);
       }
 
       /**
-       * Parse ayee
+       * Parse payee
        */
-      const entryPayee = entryObject["Tekst"];
+      const entryPayee = entryObject.Text;
       if (entryPayee) {
         parsedEntry.Payee = getMappedPayee(entryPayee).replace(
           /^\s+|\s+$|\s+(?=\s)/g,
@@ -145,7 +177,25 @@ async function parseCSVFile(filePath: string) {
 
   const jsonObject = await converter.fromFile(fullPath);
   const parsedObject = parseCSV(jsonObject);
-  console.log(">>>>>> parsedObject: ", parsedObject);
+
+  const csvHeaders = [
+    { id: "Date", title: "Date" },
+    { id: "Payee", title: "Payee" },
+    { id: "Category", title: "Category" },
+    { id: "Memo", title: "Memo" },
+    { id: "Outflow", title: "Outflow" },
+    { id: "Inflow", title: "Inflow" },
+  ];
+
+  const csvWriter = createObjectCsvWriter({
+    path: `${OUTPUT_CSV_FILEPATH}${filePath}`,
+    header: csvHeaders,
+  });
+
+  csvWriter
+    .writeRecords(parsedObject)
+    .then(() => console.log("The CSV file was written successfully"))
+    .catch((error) => console.log(`Error writing CSV file: ${error}`));
 }
 
 async function mainLoop() {
@@ -165,9 +215,9 @@ async function mainLoop() {
   await Promise.all(sanitizeJobs);
 
   /**
-   * 2. Parse CSV's.
+   * 2. Parse and write CSV's.
    *
-   * Parse all CSV files in sanitized folder.
+   * Parse all CSV files in sanitized folder, write to output folder.
    */
   const sanitisedCSVFiles: string[] = await getCSVFilePaths({
     basePath: SANITIZED_CSV_FILEPATH,
@@ -194,12 +244,61 @@ function isNegative(input: number) {
  * Map Danish input category to English name
  */
 function getMappedCategory(inputCategory: string) {
-  return inputCategory;
+  return "?";
 }
 
 /**
  * Map Danish payee to readable name
  */
 function getMappedPayee(inputPayee: string) {
+  const payeeMap = new Map<string, string>([
+    ["ZARA", "Zara"],
+    ["APCOA", "Apcoa"],
+    ["NETTO", "Netto"],
+    ["Føtex", "Føtex"],
+    ["Lønoverførsel", "Salary"],
+    ["JYSK", "JYSK"],
+    ["IKEA", "Ikea"],
+    ["Lagkagehuset", "Lagkagehuset"],
+    ["McDonald", "McDonalds"],
+    ["Børneloppen", "Børneloppen"],
+    ["Bauhaus", "Bauhaus"],
+    ["Sliders", "Sliders"],
+    ["DK ARBEJDERNES LANDSBANK", "ATM"],
+    ["F@TEX", "Føtex"],
+    ["VERDO", "Verdo"],
+    ["Flying Tiger", "Flying Tiger"],
+    ["Irma", "Irma"],
+    ["DANICA", "Danica Pension Ejd. Invest."],
+    ["Sluseholmens Apotek", "Sluseholmens Apotek"],
+    ["NEMLIG.COM", "nemlig.com"],
+    ["SPOTIFY", "Spotify"],
+    ["Wolt", "Wolt"],
+    ["B@RNELOPPEN", "Børneloppen"],
+    ["JUNO", "Juno"],
+    ["HARALD NYBORG", "Harald Nyborg"],
+    ["PROSA", "PROSA"],
+    ["SILVAN", "SILVAN"],
+    ["DINOS LEGELAND", "Dinos Legeland"],
+    ["matas", "MATAS"],
+    ["VALBY TANDKLINI", "Valby Tandklinik"],
+    ["ZOOLOGISK HAVE", "Zoologisk Have"],
+    ["La Focaccia", "La Focaccia"],
+  ]);
+
+  // Check for a match without spaces
+  for (const key of payeeMap.keys()) {
+    if (containsSubstring(inputPayee, key)) {
+      return payeeMap.get(key) ?? "";
+    }
+  }
+
   return inputPayee;
+}
+
+function containsSubstring(input: string, target: string): boolean {
+  return input
+    .replace(/\s/g, "")
+    .toLowerCase()
+    .includes(target.replace(/\s/g, "").toLowerCase());
 }
