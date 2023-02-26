@@ -147,9 +147,16 @@ async function parseCSVFile(filePath: string) {
       /**
        * Parse category
        */
+      const entryMainCategory = entryObject.Maincategory;
       const entryCategory = entryObject.Category;
       if (entryCategory) {
-        parsedEntry.Category = getMappedCategory(entryCategory);
+        const { mappedCategory, mappedMemo } = getMappedCategory({
+          mainCategory: entryMainCategory,
+          category: entryCategory,
+        });
+
+        parsedEntry.Category = mappedCategory;
+        parsedEntry.Memo = mappedMemo;
       }
 
       /**
@@ -157,10 +164,10 @@ async function parseCSVFile(filePath: string) {
        */
       const entryPayee = entryObject.Text;
       if (entryPayee) {
-        parsedEntry.Payee = getMappedPayee(entryPayee).replace(
-          /^\s+|\s+$|\s+(?=\s)/g,
-          ""
-        );
+        const cleanedPayee = cleanupPayee(entryPayee);
+        const mappedPayee = getMappedPayee(cleanedPayee);
+
+        parsedEntry.Payee = mappedPayee;
       }
 
       output.push(parsedEntry);
@@ -240,11 +247,31 @@ function isNegative(input: number) {
   return input < 0;
 }
 
+function cleanupPayee(input: string) {
+  const cleaned = input.replace(/^\s+|\s+$|\s+(?=\s)/g, "");
+  const withoutIdentifiers = cleaned
+    .replace("MCDK ", "")
+    .replace("DK ", "")
+    .replace("NETS*", "");
+
+  return withoutIdentifiers;
+}
+
 /**
  * Map Danish input category to English name
  */
-function getMappedCategory(inputCategory: string) {
-  return "?";
+function getMappedCategory({
+  mainCategory,
+  category,
+}: {
+  mainCategory: string;
+  category: string;
+}) {
+  let mappedCategory = "?";
+
+  const mappedMemo = `[${mainCategory}]: ${category}`;
+
+  return { mappedCategory, mappedMemo };
 }
 
 /**
@@ -282,8 +309,30 @@ function getMappedPayee(inputPayee: string) {
     ["DINOS LEGELAND", "Dinos Legeland"],
     ["matas", "MATAS"],
     ["VALBY TANDKLINI", "Valby Tandklinik"],
+    ["VALBY TANDPLEJE", "Valby Tandpleje"],
     ["ZOOLOGISK HAVE", "Zoologisk Have"],
     ["La Focaccia", "La Focaccia"],
+    ["7-Eleven", "7-Eleven"],
+    ["BOG IDE", "Bog & Idé"],
+    ["Zalando", "Zalando"],
+    ["Københavns Kommune", "Københavns Kommune"],
+    ["TRYG", "TRYG"],
+    ["BAHNE", "Bahne"],
+    ["S@STRENE GRENE", "Søstrene Grene"],
+    ["Henri", "Henri"],
+    ["NORMAL", "NORMAL"],
+    ["Muban Thai", "Muban Thai"],
+    ["Uno-X", "Uno-X"],
+    ["Q-Park", "Q-Park"],
+    ["SuperBrugsen", "SuperBrugsen"],
+    ["Spar", "Spar"],
+    ["Fakta", "Fakta"],
+    ["PLEO", "PLEO"],
+    ["1 stk. hævning i andre pengeinst", "Bank Expenses"],
+    ["CIRCLE K", "Circle K"],
+    ["BILKA", "Bilka"],
+    ["SAXO", "Saxo"],
+    ["Skatteforvaltningen", "Skatteforvaltningen"],
   ]);
 
   // Check for a match without spaces
