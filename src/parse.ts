@@ -256,7 +256,10 @@ function getCleanedPayee(input: string) {
     .replace("DK ", "")
     .replace("NETS*", "")
     .replace("PAY*", "")
-    .replace("Klarna*", "");
+    .replace("Klarna*", "")
+    .replace("A/S", "")
+    .replace("Aps", "")
+    .trim();
 
   const replaceWithQuote = removeIdentifiers.replace("À", "'");
   const removeExcessQuotes = replaceWithQuote
@@ -265,7 +268,16 @@ function getCleanedPayee(input: string) {
     .replace(/"$/, "")
     .replace(/"/g, "'");
 
-  return removeExcessQuotes;
+  const titleCased = titleCase(removeExcessQuotes);
+  return titleCased;
+}
+
+function titleCase(str: string): string {
+  if (str.trim() === str.toUpperCase()) {
+    return str.toLowerCase().replace(/\b\w/g, (match) => match.toUpperCase());
+  } else {
+    return str;
+  }
 }
 
 /**
@@ -316,9 +328,9 @@ function getMappedPayee(inputPayee: string) {
     ["JUNO", "Juno"],
     ["HARALD NYBORG", "Harald Nyborg"],
     ["PROSA", "PROSA"],
-    ["SILVAN", "SILVAN"],
+    ["SILVAN", "Silvan"],
     ["DINOS LEGELAND", "Dinos Legeland"],
-    ["matas", "MATAS"],
+    ["matas", "Matas"],
     ["VALBY TANDKLINI", "Valby Tandklinik"],
     ["VALBY TANDPLEJE", "Valby Tandpleje"],
     ["ZOOLOGISK HAVE", "Zoologisk Have"],
@@ -327,7 +339,7 @@ function getMappedPayee(inputPayee: string) {
     ["BOG IDE", "Bog & Idé"],
     ["Zalando", "Zalando"],
     ["Københavns Kommune", "Københavns Kommune"],
-    ["TRYG", "TRYG"],
+    ["TRYG", "Tryg"],
     ["BAHNE", "Bahne"],
     ["S@STRENE GRENE", "Søstrene Grene"],
     ["Henri", "Henri"],
@@ -347,6 +359,11 @@ function getMappedPayee(inputPayee: string) {
     ["Skatteforvaltningen", "Skatteforvaltningen"],
     ["VESTERBRO KONTORFORSYN", "Vesterbro Kontorforsyning"],
     ["Amazon Video", "Amazon Video"],
+    ["ARBEJDERNES LANDSBANK", "Arbejdernes Landsbank"],
+    ["EASYJET", "EasyJet"],
+    ["FISKERYTTEREN", "Fiskerytteren"],
+    ["NORDISK FILM", "Nordisk Film"],
+    ["COS DK0560", "COS"],
   ]);
 
   // Check for a match without spaces
