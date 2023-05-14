@@ -364,6 +364,7 @@ function getMappedPayee(inputPayee: string) {
     ["FISKERYTTEREN", "Fiskerytteren"],
     ["NORDISK FILM", "Nordisk Film"],
     ["COS DK0560", "COS"],
+    ["Sn.Nord* Vpncom", "NordVPN"],
   ]);
 
   // Check for a match without spaces
