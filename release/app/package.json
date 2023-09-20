@@ -1,6 +1,6 @@
 {
   "name": "sydbank-ynab-parser",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Sydbank YNAB CSV parser Electron app",
   "license": "MIT",
   "author": {

@@ -180,7 +180,6 @@
       "target": {
         "target": "default",
         "arch": [
-          "arm64",
           "x64"
         ]
       },
@@ -206,17 +205,6 @@
           "path": "/Applications"
         }
       ]
-    },
-    "win": {
-      "target": [
-        "nsis"
-      ]
-    },
-    "linux": {
-      "target": [
-        "AppImage"
-      ],
-      "category": "Development"
     },
     "directories": {
       "app": "release/app",
