@@ -14,6 +14,7 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+import { formatCSV } from './format-csv';
 
 class AppUpdater {
   constructor() {
@@ -25,10 +26,16 @@ class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
-ipcMain.on('ipc-example', async (event, arg) => {
-  const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
-  console.log(msgTemplate(arg));
-  event.reply('ipc-example', msgTemplate('pong'));
+ipcMain.on('ipc-example', async (event) => {
+  event.reply('ipc-example', 'pong');
+});
+
+ipcMain.on('parse-csv', async (event, filePath) => {
+  // Read and format the CSV file in the main process
+  const formattedCSVData = await formatCSV(filePath);
+
+  // Send the formatted data back to the renderer process
+  event.sender.send('parse-csv', JSON.stringify(formattedCSVData));
 });
 
 if (process.env.NODE_ENV === 'production') {
