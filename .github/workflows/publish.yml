@@ -24,14 +24,11 @@ jobs:
           cache: npm
 
       - name: Install and build
-        run: |
-          npm install
-          npm run postinstall
-          npm run build
-
-      - name: Publish releases
         env:
           # These values are used for auto updates signing
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          npm exec electron-builder -- --publish always --mac
+          npm install
+          npm run postinstall
+          npm run build
+          npm run package
