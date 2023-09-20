@@ -119,29 +119,7 @@ async function parseCSVFile(filePath: string) {
   const jsonObject = await converter.fromFile(filePath);
   const parsedObject = parseCSV(jsonObject);
 
-  const csvHeaders = [
-    { id: 'Date', title: 'Date' },
-    { id: 'Payee', title: 'Payee' },
-    { id: 'Category', title: 'Category' },
-    { id: 'Memo', title: 'Memo' },
-    { id: 'Outflow', title: 'Outflow' },
-    { id: 'Inflow', title: 'Inflow' },
-  ];
-
-  // Create a CSV stringifier with the specified headers
-  const csvStringifier = createObjectCsvStringifier({
-    header: csvHeaders,
-  });
-
-  console.log('>>>>>> jsonObject: ', jsonObject);
-
-  // Format the parsed data as a CSV string
-  const csvData =
-    csvStringifier.getHeaderString() +
-    '\n' +
-    csvStringifier.stringifyRecords(parsedObject);
-
-  return csvData;
+  return parsedObject;
 }
 
 function isNegative(input: number) {
@@ -292,9 +270,48 @@ function getTargetFilename() {
   return targetFileName;
 }
 
+function convertArrayToCSV(data: any[]) {
+  if (!Array.isArray(data) || data.length === 0) {
+    throw new Error('Input data must be a non-empty array of objects.');
+  }
+
+  // Extract the headers from the first object in the array
+  const headers = [
+    { id: 'Date', title: 'Date' },
+    { id: 'Payee', title: 'Payee' },
+    { id: 'Category', title: 'Category' },
+    { id: 'Memo', title: 'Memo' },
+    { id: 'Outflow', title: 'Outflow' },
+    { id: 'Inflow', title: 'Inflow' },
+  ];
+
+  // Extract the titles
+  const headerTitles = headers.map((header) => header.title);
+
+  // Create an array to store the CSV data
+  const csvData = [];
+
+  // Add the header row to the CSV data
+  csvData.push(headerTitles.join(','));
+
+  // Iterate over the array and convert each object to a CSV row
+  for (const item of data) {
+    const values = headerTitles.map((header) => item[header]);
+    csvData.push(values.join(','));
+  }
+
+  // Join the rows with newline characters to create the CSV content
+  const csvContent = csvData.join('\n');
+
+  return csvContent;
+}
+
 export async function formatCSV(filePath: string) {
+  const parsed = await parseCSVFile(filePath);
+  const converted = convertArrayToCSV(parsed);
+
   return {
-    data: await parseCSVFile(filePath),
+    data: converted,
     fileName: getTargetFilename(),
   };
 }

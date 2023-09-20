@@ -31,7 +31,7 @@ ipcMain.on('parse-csv', async (event, filePath) => {
   const { data, fileName } = await formatCSV(filePath);
 
   // Send the formatted data back to the renderer process
-  event.sender.send('parse-csv', JSON.stringify(data), fileName);
+  event.sender.send('parse-csv', JSON.stringify({ data, fileName }));
 });
 
 if (process.env.NODE_ENV === 'production') {

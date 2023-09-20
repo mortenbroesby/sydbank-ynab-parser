@@ -12,10 +12,10 @@ const DropArea: React.FC<DropAreaProps> = ({}) => {
     const handleParseCsvResponse = (
       event: Electron.IpcRendererEvent,
       responseData: string,
-      responseFileName: string,
     ) => {
-      setParsedData(responseData);
-      setParsedFileName(responseFileName);
+      const { data, fileName } = JSON.parse(responseData);
+      setParsedData(data);
+      setParsedFileName(fileName);
     };
 
     // Listen for the 'parse-csv' response
