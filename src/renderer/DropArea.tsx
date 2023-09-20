@@ -1,20 +1,21 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Box, Text } from '@chakra-ui/react';
+import { Box, Text, Button, Stack, ButtonGroup } from '@chakra-ui/react';
 
-interface DropAreaProps {
-  onFileDrop: (filePath: string) => void;
-}
+interface DropAreaProps {}
 
-const DropArea: React.FC<DropAreaProps> = ({ onFileDrop }) => {
+const DropArea: React.FC<DropAreaProps> = ({}) => {
+  const [droppedFilePath, setDroppedFilePath] = useState<string | null>(null);
   const [parsedData, setParsedData] = useState<string | null>(null);
+  const [parsedFileName, setParsedFileName] = useState<string | null>(null);
 
   useEffect(() => {
     const handleParseCsvResponse = (
       event: Electron.IpcRendererEvent,
-      response: string,
+      responseData: string,
+      responseFileName: string,
     ) => {
-      setParsedData(response);
-      console.log('>>>>>> response: ', response);
+      setParsedData(responseData);
+      setParsedFileName(responseFileName);
     };
 
     // Listen for the 'parse-csv' response
@@ -30,58 +31,82 @@ const DropArea: React.FC<DropAreaProps> = ({ onFileDrop }) => {
   }, []);
 
   const downloadFormattedCSV = () => {
-    if (parsedData) {
-      // Create a Blob containing the formatted CSV data
-      const blob = new Blob([parsedData], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
+    if (!parsedData) return;
 
-      // Create a hidden anchor element to trigger the download
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'formatted.csv';
+    // Create a Blob containing the formatted CSV data
+    const blob = new Blob([parsedData], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
 
-      // Trigger a click event on the anchor element to start the download
-      a.click();
+    // Create a hidden anchor element to trigger the download
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = parsedFileName ?? 'formatted.csv';
 
-      // Release the URL object to free up resources
-      URL.revokeObjectURL(url);
-    }
+    // Trigger a click event on the anchor element to start the download
+    a.click();
+
+    // Release the URL object to free up resources
+    URL.revokeObjectURL(url);
   };
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent<HTMLDivElement>) => {
-      e.preventDefault();
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
 
-      const files = e.dataTransfer?.files;
-      if (files && files.length > 0) {
-        const filePath = files[0].path;
+    // Get the file path from the dropped file
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const filePath = files[0].path;
 
-        // Check if the dropped file is a CSV file
-        if (filePath.toLowerCase().endsWith('.csv')) {
-          onFileDrop(filePath);
-
-          // Trigger an IPC message with the file path
-          window.electron.ipcRenderer.send('parse-csv', filePath);
-        }
+      // Check if the dropped file is a CSV file
+      if (filePath.toLowerCase().endsWith('.csv')) {
+        // Trigger an IPC message with the file path
+        setDroppedFilePath(filePath);
+        window.electron.ipcRenderer.send('parse-csv', filePath);
       }
-    },
-    [onFileDrop],
-  );
+    }
+  }, []);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+  };
+
+  const handleReset = () => {
+    setParsedData(null);
+    setParsedFileName(null);
   };
 
   return (
     <Box
       onDrop={handleDrop}
       onDragOver={handleDragOver}
-      p={4}
-      border="2px dashed #ccc"
-      borderRadius="md"
-      textAlign="center"
+      position="fixed"
+      top={0}
+      left={0}
+      width="100%"
+      height="100%"
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
     >
-      <Text>Drag &amp; Drop a CSV file here</Text>
+      <Box
+        p={6}
+        border="2px dashed #ccc"
+        borderRadius="md"
+        textAlign="center"
+        maxWidth={400}
+      >
+        {!parsedData && <Text>Drag &amp; Drop a CSV file here</Text>}
+
+        {parsedData && (
+          <Stack spacing={4}>
+            <Text mb={4}>File path of the dropped CSV: {droppedFilePath}</Text>
+            <Button colorScheme="whatsapp" onClick={downloadFormattedCSV}>
+              Download Formatted CSV
+            </Button>
+            <Button onClick={handleReset}>Clear</Button>
+          </Stack>
+        )}
+      </Box>
     </Box>
   );
 };

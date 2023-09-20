@@ -1,6 +1,8 @@
+import { ChakraProvider, CSSReset, Box } from '@chakra-ui/react';
 import DropArea from './DropArea';
 import { useState } from 'react';
-import './App.css';
+
+import customTheme from './chakra-theme';
 
 export default function App() {
   const [droppedFilePath, setDroppedFilePath] = useState<string | null>(null);
@@ -10,14 +12,11 @@ export default function App() {
   };
 
   return (
-    <>
-      <DropArea onFileDrop={handleFileDrop} />
-
-      {droppedFilePath && (
-        <div className="dropped-file-path">
-          File path of the dropped CSV: {droppedFilePath}
-        </div>
-      )}
-    </>
+    <ChakraProvider theme={customTheme}>
+      <CSSReset />
+      <Box p={4} textAlign="center">
+        <DropArea />
+      </Box>
+    </ChakraProvider>
   );
 }
