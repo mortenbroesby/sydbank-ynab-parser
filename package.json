@@ -1,6 +1,6 @@
 {
   "name": "sydbank-ynab-parser",
-  "description": "Sydbank YNAB CSV parser app",
+  "description": "Sydbank YNAB CSV parser Electron app",
   "keywords": [
     "electron",
     "boilerplate",

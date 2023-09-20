@@ -1,7 +1,7 @@
 {
   "name": "sydbank-ynab-parser",
-  "version": "1.0.6",
-  "description": "Sydbank YNAB CSV parser app",
+  "version": "1.0.7",
+  "description": "Sydbank YNAB CSV parser Electron app",
   "license": "MIT",
   "author": {
     "name": "Morten Broesby-Olsen",
