@@ -1,6 +1,6 @@
 {
   "name": "sydbank-ynab-parser",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Sydbank YNAB CSV parser app",
   "license": "MIT",
   "author": {
