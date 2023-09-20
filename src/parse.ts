@@ -40,8 +40,6 @@ interface YNABEntry {
 
 type YnabFields = "Date" | "Payee" | "Category" | "Memo" | "Outflow" | "Inflow";
 
-const YNAB_FIELDS = ["Date", "Payee", "Category", "Memo", "Outflow", "Inflow"];
-
 type SydbankFields =
   | "Date"
   | "Text"
