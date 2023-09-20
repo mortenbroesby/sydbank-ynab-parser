@@ -26,10 +26,6 @@ class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
-ipcMain.on('ipc-example', async (event) => {
-  event.reply('ipc-example', 'pong');
-});
-
 ipcMain.on('parse-csv', async (event, filePath) => {
   // Read and format the CSV file in the main process
   const { data, fileName } = await formatCSV(filePath);
