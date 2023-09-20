@@ -95,7 +95,7 @@ const DropArea: React.FC<DropAreaProps> = ({}) => {
         textAlign="center"
         maxWidth={400}
       >
-        {!parsedData && <Text>Drag &amp; Drop a CSV file here</Text>}
+        {!parsedData && <Text>Drag &amp; Drop a Sydbank CSV file here</Text>}
 
         {parsedData && (
           <Stack spacing={4}>
