@@ -163,7 +163,7 @@
     "webpack-merge": "^5.9.0"
   },
   "build": {
-    "productName": "SydbankYNABParser",
+    "productName": "Sydbank YNAB Parser",
     "appId": "org.erb.SydbankYNABParser",
     "asar": true,
     "asarUnpack": "**\\*.{node,dll}",
