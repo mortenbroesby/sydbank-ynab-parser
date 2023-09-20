@@ -1,24 +1,18 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "Node16",
-    "lib": ["ES2022"],
-    "moduleResolution": "Node16",
-    "rootDir": ".",
-    "outDir": "build",
-    "skipLibCheck": true,
-    "allowSyntheticDefaultImports": true,
-    "importHelpers": true,
-    "alwaysStrict": true,
+    "incremental": true,
+    "target": "es2022",
+    "module": "commonjs",
+    "lib": ["dom", "es2022"],
+    "jsx": "react-jsx",
+    "strict": true,
     "sourceMap": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitReturns": true,
-    "noImplicitAny": false,
-    "noImplicitThis": false,
-    "strictNullChecks": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "outDir": ".erb/dll"
   },
-  "include": ["src/**/*", "__tests__/**/*"]
+  "exclude": ["test", "release/build", "release/app/dist", ".erb/dll"]
 }
