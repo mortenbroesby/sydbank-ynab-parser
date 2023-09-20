@@ -11,7 +11,6 @@ import csv from "csvtojson";
 import { createObjectCsvWriter } from "csv-writer";
 
 const INPUT_CSV_FILEPATH = "./csv/input/";
-const SANITIZED_CSV_FILEPATH = "./csv/sanitized/";
 const OUTPUT_CSV_FILEPATH = "./csv/output/";
 
 function getCSVFilePaths({
@@ -28,33 +27,6 @@ function getCSVFilePaths({
       resolve(filesArray);
     });
   });
-}
-
-async function sanitizeCSVFile(filePath: string) {
-  let targetFileName = filePath;
-
-  /**
-   * Cleanup all nordic characters
-   */
-  const fileContent = await fs.readFile(
-    `${INPUT_CSV_FILEPATH}${filePath}`,
-    "utf8"
-  );
-
-  await fs.writeFile(`${INPUT_CSV_FILEPATH}${filePath}`, fileContent, "utf8");
-
-  // Only format non-formatted files
-  if (!filePath.includes("sydbank_csv_")) {
-    targetFileName = `sydbank_csv_${format(
-      new Date(),
-      "dd-MM-yyyy_hh.mm.ss"
-    )}.csv`;
-  }
-
-  await fs.move(
-    `${INPUT_CSV_FILEPATH}${filePath}`,
-    `${SANITIZED_CSV_FILEPATH}${targetFileName}`
-  );
 }
 
 interface YNABEntry {
@@ -173,7 +145,7 @@ function parseCSV(jsonObject) {
 }
 
 async function parseCSVFile(filePath: string) {
-  const fullPath = `${SANITIZED_CSV_FILEPATH}${filePath}`;
+  const fullPath = `${INPUT_CSV_FILEPATH}${filePath}`;
 
   const converter = csv({
     delimiter: ";",
@@ -193,8 +165,13 @@ async function parseCSVFile(filePath: string) {
     { id: "Inflow", title: "Inflow" },
   ];
 
+  const targetFileName = `sydbank_csv_${format(
+    new Date(),
+    "dd-MM-yyyy_hh.mm.ss"
+  )}.csv`;
+
   const csvWriter = createObjectCsvWriter({
-    path: `${OUTPUT_CSV_FILEPATH}${filePath}`,
+    path: `${OUTPUT_CSV_FILEPATH}${targetFileName}`,
     header: csvHeaders,
   });
 
@@ -205,31 +182,11 @@ async function parseCSVFile(filePath: string) {
 }
 
 async function mainLoop() {
-  /**
-   * 1. Sanitise CSV's.
-   *
-   * Grab CSV files from input folder. Rename with sanitised file-name. Move to "sanitized" folder.
-   */
-  const unsanitisedCSVFiles: string[] = await getCSVFilePaths({
+  const inputCSVFiles: string[] = await getCSVFilePaths({
     basePath: INPUT_CSV_FILEPATH,
   });
 
-  const sanitizeJobs = unsanitisedCSVFiles.map((filePath) =>
-    sanitizeCSVFile(filePath)
-  );
-
-  await Promise.all(sanitizeJobs);
-
-  /**
-   * 2. Parse and write CSV's.
-   *
-   * Parse all CSV files in sanitized folder, write to output folder.
-   */
-  const sanitisedCSVFiles: string[] = await getCSVFilePaths({
-    basePath: SANITIZED_CSV_FILEPATH,
-  });
-
-  const parseJobs = sanitisedCSVFiles.map(
+  const parseJobs = inputCSVFiles.map(
     async (filePath) => await parseCSVFile(filePath)
   );
 

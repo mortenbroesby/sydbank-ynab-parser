@@ -4,10 +4,7 @@
   "description": "Sydbank YNAB parser script",
   "main": "index.js",
   "scripts": {
-    "parse": "node build/src/parse.js",
-    "clean": "node build/src/cleanup.js",
-    "build": "tsc -p tsconfig.json",
-    "watch": "tsc -w -p tsconfig.json"
+    "parse": "ts-node src/parse.ts"
   },
   "dependencies": {
     "archiver": "^5.3.1",
