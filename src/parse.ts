@@ -290,11 +290,10 @@ function getMappedCategory({
   mainCategory: string;
   category: string;
 }) {
-  let mappedCategory = "?";
+  // const mappedCategory = "?";
+  // const mappedMemo = `[${mainCategory}]: ${category}`;
 
-  const mappedMemo = `[${mainCategory}]: ${category}`;
-
-  return { mappedCategory, mappedMemo };
+  return { mappedCategory: "", mappedMemo: "" };
 }
 
 /**
