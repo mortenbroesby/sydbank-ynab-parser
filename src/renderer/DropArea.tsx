@@ -1,5 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Box, Text, Button, Stack, ButtonGroup } from '@chakra-ui/react';
+import {
+  Box,
+  Text,
+  Button,
+  Stack,
+  ButtonGroup,
+  Heading,
+} from '@chakra-ui/react';
 
 interface DropAreaProps {}
 
@@ -87,6 +94,7 @@ const DropArea: React.FC<DropAreaProps> = ({}) => {
       display="flex"
       justifyContent="center"
       alignItems="center"
+      cursor="pointer"
     >
       <Box
         p={6}
@@ -95,17 +103,25 @@ const DropArea: React.FC<DropAreaProps> = ({}) => {
         textAlign="center"
         maxWidth={400}
       >
-        {!parsedData && <Text>Drag &amp; Drop a Sydbank CSV file here</Text>}
+        <Stack spacing={4}>
+          <Heading>Sydbank YNAB Parser</Heading>
 
-        {parsedData && (
-          <Stack spacing={4}>
-            <Text mb={4}>File path of the dropped CSV: {droppedFilePath}</Text>
-            <Button colorScheme="whatsapp" onClick={downloadFormattedCSV}>
-              Download Formatted CSV
-            </Button>
-            <Button onClick={handleReset}>Clear</Button>
-          </Stack>
-        )}
+          {!parsedData && <Text>Drag &amp; Drop a Sydbank CSV file here</Text>}
+
+          {parsedData && (
+            <Stack spacing={4}>
+              <Text mb={4}>
+                File path of the dropped CSV: {droppedFilePath}
+              </Text>
+              <Button colorScheme="telegram" onClick={downloadFormattedCSV}>
+                Download Formatted CSV
+              </Button>
+              <Button colorScheme="whiteAlpha" onClick={handleReset}>
+                Clear
+              </Button>
+            </Stack>
+          )}
+        </Stack>
       </Box>
     </Box>
   );

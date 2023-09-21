@@ -8,7 +8,7 @@ const theme = extendTheme({
         color: 'white',
         height: '100vh',
         background:
-          'linear-gradient(200.96deg, #fedc2a -29.09%, #dd5789 51.77%, #7a2c9e 129.35%)',
+          'linear-gradient(200.96deg, #3674a7 -29.09%, #244564 129.35%)',
         fontFamily: 'sans-serif',
         overflowY: 'hidden',
         display: 'flex',
@@ -21,7 +21,7 @@ const theme = extendTheme({
           left: 0,
           width: '100%',
           height: '100%',
-          backgroundColor: 'rgba(0, 0, 0, 0.2)',
+          backgroundColor: 'rgba(0, 0, 0, 0.15)',
         },
       },
     },
