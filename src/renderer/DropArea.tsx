@@ -19,6 +19,7 @@ const DropArea: React.FC<DropAreaProps> = ({}) => {
   const [droppedFilePath, setDroppedFilePath] = useState<string | null>(null);
   const [parsedData, setParsedData] = useState<string | null>(null);
   const [parsedFileName, setParsedFileName] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -26,7 +27,14 @@ const DropArea: React.FC<DropAreaProps> = ({}) => {
       event: Electron.IpcRendererEvent,
       responseData: string,
     ) => {
-      const { data, fileName } = JSON.parse(responseData);
+      const { data, fileName, error } = JSON.parse(responseData);
+
+      if (error) {
+        console.error(error);
+        setErrorMessage(error);
+        return;
+      }
+
       setParsedData(data);
       setParsedFileName(fileName);
     };
@@ -174,6 +182,16 @@ const DropArea: React.FC<DropAreaProps> = ({}) => {
             )}
           </Stack>
         </Box>
+
+        {errorMessage && (
+          <Stack spacing={4} background="white" borderRadius="2xl" padding="4">
+            <Text color="black" fontWeight="bold">
+              Oops. An error happened while parsing the CSV file 😬
+            </Text>
+
+            <Text color="black">Message: {errorMessage}</Text>
+          </Stack>
+        )}
 
         {parsedData ? (
           <Button colorScheme="whiteAlpha" onClick={handleReset}>

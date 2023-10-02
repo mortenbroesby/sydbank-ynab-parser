@@ -27,11 +27,16 @@ class AppUpdater {
 let mainWindow: BrowserWindow | null = null;
 
 ipcMain.on('parse-csv', async (event, filePath) => {
-  // Read and format the CSV file in the main process
-  const { data, fileName } = await formatCSV(filePath);
+  try {
+    // Read and format the CSV file in the main process
+    const { data, fileName } = await formatCSV(filePath);
 
-  // Send the formatted data back to the renderer process
-  event.sender.send('parse-csv', JSON.stringify({ data, fileName }));
+    // Send the formatted data back to the renderer process
+    event.sender.send('parse-csv', JSON.stringify({ data, fileName }));
+  } catch (error: any) {
+    // Send the error back to the renderer process
+    event.sender.send('parse-csv', JSON.stringify({ error: error.message }));
+  }
 });
 
 if (process.env.NODE_ENV === 'production') {

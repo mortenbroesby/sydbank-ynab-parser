@@ -302,7 +302,6 @@ function convertArrayToCSV(data: any[]) {
 
   // Join the rows with newline characters to create the CSV content
   const csvContent = csvData.join('\n');
-
   return csvContent;
 }
 
