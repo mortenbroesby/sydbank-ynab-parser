@@ -238,7 +238,7 @@ function getMappedPayee(inputPayee: string) {
     ['NETTO', 'Netto'],
     ['Føtex', 'Føtex'],
     ['Lønoverførsel', 'Salary'],
-    ['JYSK', 'JYSK'],
+    ['JYSK', 'Jysk'],
     ['IKEA', 'Ikea'],
     ['Lagkagehuset', 'Lagkagehuset'],
     ['McDonald', 'McDonalds'],
@@ -301,7 +301,7 @@ function getMappedPayee(inputPayee: string) {
   // Check for a match without spaces
   for (const key of payeeMap.keys()) {
     if (containsSubstring(inputPayee, key)) {
-      return payeeMap.get(key) ?? '';
+      return inputPayee.replace(key, payeeMap.get(key) ?? '');
     }
   }
 
