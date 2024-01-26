@@ -11,7 +11,7 @@ function getCSVFilePaths(basePath: string) {
   try {
     const files = fs.readdirSync(basePath);
     const csvFiles = files.filter((file) => {
-      return file.endsWith('.csv') && file !== '.DS_Store';
+      return file.endsWith('.csv');
     });
     return csvFiles.map((csvFile) => path.join(basePath, csvFile));
   } catch (error) {
@@ -204,11 +204,11 @@ function getCleanedPayee(input: string) {
   return titleCased;
 }
 
-function titleCase(str: string): string {
-  if (str.trim() === str.toUpperCase()) {
-    return str.toLowerCase().replace(/\b\w/g, (match) => match.toUpperCase());
+export function titleCase(input: string): string {
+  if (input.trim() === input.toUpperCase()) {
+    return input.toLowerCase().replace(/\b\w/g, (match) => match.toUpperCase());
   } else {
-    return str;
+    return input;
   }
 }
 
@@ -231,7 +231,7 @@ function getMappedCategory({
 /**
  * Map Danish payee to readable name
  */
-function getMappedPayee(inputPayee: string) {
+export function getMappedPayee(inputPayee: string) {
   const payeeMap = new Map<string, string>([
     ['ZARA', 'Zara'],
     ['APCOA', 'Apcoa'],
@@ -301,16 +301,36 @@ function getMappedPayee(inputPayee: string) {
   // Check for a match without spaces
   for (const key of payeeMap.keys()) {
     if (containsSubstring(inputPayee, key)) {
-      return inputPayee.replace(key, payeeMap.get(key) ?? '');
+      return replaceSubstring(inputPayee, payeeMap);
     }
   }
 
   return inputPayee;
 }
 
-function containsSubstring(input: string, target: string): boolean {
-  return input
-    .replace(/\s/g, '')
-    .toLowerCase()
-    .includes(target.replace(/\s/g, '').toLowerCase());
+export function replaceSubstring(
+  inputPayee: string,
+  payeeMap: Map<string, string>,
+): string {
+  let modifiedInput = inputPayee; // Initialize with the original input
+
+  // Check for a match without spaces
+  for (const key of payeeMap.keys()) {
+    if (containsSubstring(modifiedInput, key)) {
+      // Match lowercase input value to lowercase found value, replace substring
+      modifiedInput = modifiedInput.replace(
+        new RegExp(key, 'gi'),
+        payeeMap.get(key) ?? '',
+      );
+    }
+  }
+
+  return modifiedInput;
+}
+
+export function containsSubstring(input: string, target: string): boolean {
+  const cleanedInput = input.replace(/\s/g, '').toLowerCase();
+  const cleanedTarget = target.replace(/\s/g, '').toLowerCase();
+
+  return cleanedInput.includes(cleanedTarget);
 }
